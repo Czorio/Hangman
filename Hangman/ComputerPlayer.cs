@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Hangman
@@ -127,12 +128,16 @@ namespace Hangman
         private void readWordsFromFile(string filePath)
         {
             StreamReader sr = new StreamReader(filePath);
+            Regex regex = new Regex("[a-zA-Z]+");
 
             string tmp;
 
             while ((tmp = sr.ReadLine()) != null)
             {
-                possibleWords.Add(tmp.ToLower());
+                if (regex.IsMatch(tmp))
+                {
+                    possibleWords.Add(tmp.ToLower()); 
+                }
             }
 
             countOccurences();
