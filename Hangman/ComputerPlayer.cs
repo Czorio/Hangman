@@ -127,7 +127,16 @@ namespace Hangman
         /// <param name="filePath"></param>
         private void readWordsFromFile(string filePath)
         {
-            StreamReader sr = new StreamReader(filePath);
+            StreamReader sr;
+            try
+            {
+                 sr = new StreamReader(filePath);
+            }
+            catch (IOException e)
+            {
+
+                throw e;
+            }
             Regex regex = new Regex("[a-zA-Z]+");
 
             string tmp;

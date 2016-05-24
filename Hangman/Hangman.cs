@@ -11,7 +11,8 @@ namespace Hangman
         public static GameState gs;
         static void Main(string[] args)
         {
-            gs = new GameState("nl_NL.txt");
+            Console.WriteLine("Please select a language (Program will stil display in English)");
+            gs = new GameState(Console.ReadLine() + ".txt");
             gs.startGame();
             Console.Read();
         }
