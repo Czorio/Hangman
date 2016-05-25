@@ -52,9 +52,11 @@ namespace Hangman
                 }
             }
 
+            // if the largest similarity is over the minimum treshold ask the user whether that word is the answer
             if (findMaxSimilarity().Value > guessTreshold)
             {
-                Console.WriteLine("Is your word: {0}? Y/N", possibleWords[findMaxSimilarity().Key]);
+                string word = possibleWords[findMaxSimilarity().Key];
+                Console.WriteLine("Is your word: {0}? Y/N", word);
                 switch (Console.ReadKey().KeyChar)
                 {
                     case 'y':
@@ -62,7 +64,8 @@ namespace Hangman
                         return;
                     case 'n':
                         Console.WriteLine("Shame!");
-                        possibleWords.RemoveAt(findMaxSimilarity().Key);
+                        possibleWords.RemoveAll(x => x == word);
+                        countOccurences();
                         return;
                     default:
                         Console.WriteLine("Wrong input");
@@ -93,6 +96,8 @@ namespace Hangman
         {
             float max = .0f;
             int index = -1;
+
+            // for each word find the one with the largest similarity to the known pattern
             for (int i = 0; i < possibleWords.Count; i++)
             {
                 if (calcSimilarityToKnown(possibleWords[i]) > max)
@@ -101,6 +106,8 @@ namespace Hangman
                     index = i;
                 }
             }
+
+            // return the index and similarity of the word
             return new KeyValuePair<int, float>(index, max);
         }
 
@@ -110,6 +117,7 @@ namespace Hangman
             char[] kp = knownPattern.ToCharArray();
             char[] w = word.ToCharArray();
 
+            // see how many letters are the same and on the same position
             for (int i = 0; i < kp.Length; i++)
             {
                 if (kp[i] == w[i])
@@ -118,6 +126,7 @@ namespace Hangman
                 }
             }
 
+            // on a scale of 0.0 - 1.0
             return matches / knownPattern.Length;
         }
 
@@ -137,6 +146,8 @@ namespace Hangman
 
                 throw e;
             }
+
+            // apply regex to make sure that only letters get through
             Regex regex = new Regex("[a-zA-Z]+");
 
             string tmp;
@@ -157,11 +168,14 @@ namespace Hangman
         /// </summary>
         private void countOccurences()
         {
+            // clear the dictionary to prevent adding to previous counts
             occurences.Clear();
             foreach (string item in possibleWords)
             {
+                // loop through the word to process each separate letter
                 for (int i = 0; i < item.Length; i++) // O(n^2), oh dear
                 {
+                    // check whether the letter already exists in the dictionary
                     if (occurences.ContainsKey(item.ToCharArray()[i]))
                     {
                         occurences[item.ToCharArray()[i]]++;
@@ -182,16 +196,21 @@ namespace Hangman
         {
             if (knownPattern == null)
             {
-                knownPattern = "";
-                for (int i = 0; i < length; i++)
-                {
-                    knownPattern += ".";
-                }
+                initializePattern(length);
             }
 
             lengthOfWord = length;
             possibleWords.RemoveAll(x => x.Length != length);
             countOccurences();
+        }
+
+        private void initializePattern(int length)
+        {
+            knownPattern = "";
+            for (int i = 0; i < length; i++)
+            {
+                knownPattern += ".";
+            }
         }
 
         /// <summary>
@@ -212,6 +231,7 @@ namespace Hangman
                 pattern = tmp;
             }
 
+            // filter each word that does not fit the pattern
             for (int i = 0; i < pattern.Length; i++)
             {
                 if (pattern.ToCharArray()[i] != '.')
@@ -219,7 +239,10 @@ namespace Hangman
                     possibleWords.RemoveAll(x => x.ToCharArray()[i] != pattern.ToCharArray()[i]);
                 }
             }
+            
+            // recount occurences of letters
             countOccurences();
+            // combine to what is known about the word
             addToKnownPattern(pattern);
         }
 
@@ -233,6 +256,8 @@ namespace Hangman
             char[] p = pattern.ToCharArray();
             string newKnownPattern = "";
 
+            // The period ('.') key is a wildcard, if either pattern has a character other than the period at position i
+            // it will opt for the non-period character.
             for (int i = 0; i < knownPattern.Length; i++)
             {
                 if (kp[i] == '.' && p[i] == '.')
@@ -249,6 +274,7 @@ namespace Hangman
                 }
             }
 
+            // update known pattern
             knownPattern = newKnownPattern;
             Console.WriteLine(newKnownPattern);
         }
@@ -279,10 +305,16 @@ namespace Hangman
         /// <returns>A not yet asked letter from a random word. '0' if fail</returns>
         public char getLettertoRequest()
         {
+            // Experimental selection is smarter than the normal way of selecting.
+            // Experimental will get the letter that has the highest chance of being in the word that the CPU has to find. countOccurences() keeps track of this.
+            // Normal mode will select a random word from the list and return the first letter that has not already been asked.
             if (useExperimental)
             {
                 char c = '0';
                 int max = 0;
+                
+                // find letter with most occurences
+                // not terribly pretty, but it works
                 foreach (KeyValuePair<char, int> item in occurences)
                 {
                     if (occurences[item.Key] > max && !usedLetters.Contains(item.Key))
@@ -291,22 +323,28 @@ namespace Hangman
                         max = occurences[item.Key];
                     }
                 }
-                usedLetters.Add(c);;
+
+                // remember letter as asked and return
+                usedLetters.Add(c);
                 return c;
             }
             else
             {
+                // select a random word from the list
                 Random r = new Random();
                 string word = possibleWords[r.Next(possibleWords.Count - 1)];
 
+                // find first letter that has not already been asked
                 for (int i = 0; i < word.Length; i++)
                 {
                     if (!usedLetters.Contains(word.ToCharArray()[i]))
                     {
+                        // log letter as asked and return
                         usedLetters.Add(word.ToCharArray()[i]);
                         return word.ToCharArray()[i];
                     }
                 }
+                // if no suitable letter found, return 0
                 return '0';
             }
         }
