@@ -130,7 +130,7 @@ namespace Hangman
             StreamReader sr;
             try
             {
-                 sr = new StreamReader(filePath);
+                sr = new StreamReader(filePath);
             }
             catch (IOException e)
             {
@@ -145,7 +145,7 @@ namespace Hangman
             {
                 if (regex.IsMatch(tmp))
                 {
-                    possibleWords.Add(tmp.ToLower()); 
+                    possibleWords.Add(tmp.ToLower());
                 }
             }
 
@@ -231,13 +231,26 @@ namespace Hangman
         {
             char[] kp = knownPattern.ToCharArray();
             char[] p = pattern.ToCharArray();
+            string newKnownPattern = "";
+
             for (int i = 0; i < knownPattern.Length; i++)
             {
-                if (kp[i] == '.' && p[i] != '.')
+                if (kp[i] == '.' && p[i] == '.')
                 {
-                    kp[i] = p[i];
+                    newKnownPattern += '.';
+                }
+                else if (kp[i] == '.' && p[i] != '.')
+                {
+                    newKnownPattern += p[i];
+                }
+                else
+                {
+                    newKnownPattern += kp[i];
                 }
             }
+
+            knownPattern = newKnownPattern;
+            Console.WriteLine(newKnownPattern);
         }
 
         /// <summary>
@@ -276,10 +289,9 @@ namespace Hangman
                     {
                         c = item.Key;
                         max = occurences[item.Key];
-                        usedLetters.Add(item.Key);
                     }
                 }
-                countOccurences();
+                usedLetters.Add(c);;
                 return c;
             }
             else
@@ -295,7 +307,6 @@ namespace Hangman
                         return word.ToCharArray()[i];
                     }
                 }
-                countOccurences();
                 return '0';
             }
         }
