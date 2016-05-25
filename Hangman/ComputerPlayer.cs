@@ -34,6 +34,11 @@ namespace Hangman
         /// </summary>
         public void playTurn()
         {
+            if (possibleWords.Count == 0)
+            {
+                Hangman.gs.endGame("I do not know the word you are looking for.");
+            }
+
             // Checks to see if there is only one word left
             if (possibleWords.Count == 1)
             {
